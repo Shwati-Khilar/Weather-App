@@ -11,12 +11,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 
-//Backend where we'll retrive weather data from API
+// Backend where we'll retrieve weather data from API
 public class WeatherApp {
+    // Fetches weather data for a given location
     public static JSONObject getWeatherData(String locationName) {
         JSONArray locationData = getLocationData(locationName);
         if (locationData == null || locationData.isEmpty()) {
-            // Return null or an empty object to handle it in GUI
+             // No location found
             return null;
         }
 
@@ -24,6 +25,7 @@ public class WeatherApp {
         double latitude=(double) location.get("latitude");
         double longitude=(double) location.get("longitude");
 
+        // Build the weather API URL
         String urlString="https://api.open-meteo.com/v1/forecast?"+"latitude="+latitude+"&longitude="+longitude+"&hourly=temperature_2m,relativehumidity_2m,weather_code,windspeed_10m&timezone=America%2FLos_Angeles\n";
 
         try{
@@ -33,6 +35,8 @@ public class WeatherApp {
                 System.out.println("Error:Could not connect to API");
                 return null;
             }
+
+             // Read API response
             StringBuilder resultJson=new StringBuilder();
             Scanner scanner=new Scanner(conn.getInputStream());
             while(scanner.hasNext()){
@@ -47,7 +51,7 @@ public class WeatherApp {
             JSONObject hourly=(JSONObject) resultJsonObj.get("hourly");
 
             JSONArray time=(JSONArray) hourly.get("time");
-            int index= findIndexOfCurrentTime(time);
+            int index= findIndexOfCurrentTime(time);// Find index for current hour
 
             JSONArray temperatureData=(JSONArray) hourly.get(("temperature_2m"));
 
@@ -77,6 +81,7 @@ public class WeatherApp {
         return null;
     }
 
+    // Gets location data (latitude & longitude) from location name
     public static JSONArray getLocationData(String locationName){
         locationName=locationName.replaceAll(" ","+");
 
@@ -112,6 +117,7 @@ public class WeatherApp {
         return null;
     }
 
+     // Helper to open HTTP connection and return response
     private static  HttpURLConnection fetchAPIResponse(String urlString){
         try{
             URL url=new URL(urlString);
@@ -128,6 +134,7 @@ public class WeatherApp {
         return null;
     }
 
+    // Finds the index of the current time in the time array
     private static int findIndexOfCurrentTime(JSONArray timelist){
         String currentTime=getCurrentTime();
         for (int i=0;i<timelist.size();i++){
@@ -139,6 +146,7 @@ public class WeatherApp {
 
         return 0;
     }
+    // Returns the current time formatted for the API
     public static String getCurrentTime(){
         LocalDateTime currentDataTime=LocalDateTime.now();
 
@@ -150,6 +158,7 @@ public class WeatherApp {
 
     }
 
+    // Converts weather code to readable condition    
     private static String convertWeatherCode(long weather_code){
         String weatherCondition="";
         if(weather_code==0L){
@@ -164,7 +173,7 @@ public class WeatherApp {
             weatherCondition = "Rain";
         }else if(weather_code >= 71L && weather_code <= 77L){
             // snow
-            weatherCondition = "Snow";
+            weatherCondition = "Snow";            
         }
 
         return weatherCondition;
